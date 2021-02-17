@@ -1,0 +1,16 @@
+[
+    {
+        "modid": "compoundweapon",
+        "name": "CompoundWeapon",
+        "description": "",
+        "version": "${version}",
+        "mcversion": "${mcversion}",
+        "url": "com.github",
+        "updateUrl": "https://github.com/kabuki-mfk/CompoundWeapon",
+        "authorList": ["kabuki-mfk"],
+        "credits": "",
+        "logoFile": "",
+        "screenshots": [],
+        "dependencies": []
+    }
+]
