@@ -7,8 +7,6 @@ import net.minecraft.world.World;
 
 public interface ICombatWeapon extends IWeapon{
 
-    IWeaponAttributes getAttributeInstance();
-
     void release(World worldIn, EntityLivingBase entityIn, ItemStack stack);
 
 }
