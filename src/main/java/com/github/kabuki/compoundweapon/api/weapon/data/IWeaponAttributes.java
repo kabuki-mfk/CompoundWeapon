@@ -1,24 +1,25 @@
 package com.github.kabuki.compoundweapon.api.weapon.data;
 
-import com.github.kabuki.compoundweapon.api.data.IDataEntryBase;
-
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Objects;
 
 public interface IWeaponAttributes {
 
     @Nullable
-    default IDataEntryBase getAttribute(String name)
+    default IAttribute getAttribute(String name)
     {
         return toMap().get(name);
     }
 
-    void setAttribute(String name, Object value);
-
-    default void setAttribute(String name, IDataEntryBase value)
+    default void setAttribute(String name, IAttribute value)
     {
+        Objects.requireNonNull(name, "name must not be null");
+        Objects.requireNonNull(value, "value must not be null");
         toMap().put(name, value);
     }
 
-    Map<String, IDataEntryBase> toMap();
+    default boolean hasAttribute(String name) { return toMap().containsKey(name); }
+
+    Map<String, IAttribute> toMap();
 }
