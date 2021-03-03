@@ -2,7 +2,7 @@ package com.github.kabuki.compoundweapon.common.data;
 
 import com.github.kabuki.compoundweapon.api.data.IDataObject;
 import com.github.kabuki.compoundweapon.api.data.IDataPrimitive;
-import com.github.kabuki.compoundweapon.utils.ConverHelper;
+import com.github.kabuki.compoundweapon.utils.ConvertHelper;
 
 public class DataString implements IDataPrimitive {
     private final String value;
@@ -34,17 +34,17 @@ public class DataString implements IDataPrimitive {
 
     @Override
     public long getLong() {
-        return ConverHelper.isNumber(value) ? Long.parseLong(value) : 0;
+        return ConvertHelper.isNumber(value) ? Long.parseLong(value) : 0;
     }
 
     @Override
     public int getInt() {
-        return (int)ConverHelper.pasteDouble(value);
+        return (int) ConvertHelper.pasteDouble(value);
     }
 
     @Override
     public short getShort() {
-        if(ConverHelper.isNumber(value))
+        if(ConvertHelper.isNumber(value))
         {
             double d = Double.parseDouble(value);
             return d > Short.MAX_VALUE ? Short.MAX_VALUE : d < Short.MIN_VALUE ? Short.MIN_VALUE : Short.parseShort(value);
@@ -55,7 +55,7 @@ public class DataString implements IDataPrimitive {
 
     @Override
     public byte getByte() {
-        if(ConverHelper.isNumber(value))
+        if(ConvertHelper.isNumber(value))
         {
             double d = Double.parseDouble(value);
             return d > Byte.MAX_VALUE ? Byte.MAX_VALUE : d < Byte.MIN_VALUE ? Byte.MIN_VALUE : Byte.parseByte(value);
@@ -66,11 +66,11 @@ public class DataString implements IDataPrimitive {
 
     @Override
     public double getDouble() {
-        return ConverHelper.pasteDouble(value);
+        return ConvertHelper.pasteDouble(value);
     }
 
     @Override
     public float getFloat() {
-        return (float) ConverHelper.pasteDouble(value);
+        return (float) ConvertHelper.pasteDouble(value);
     }
 }
