@@ -11,9 +11,9 @@ public interface ISkillSlot {
 
     boolean isEmpty();
 
-    void addSkill(ISkill skill);
+    boolean addSkill(ISkill skill);
 
-    void setSkill(int slot, ISkill skill);
+    boolean setSkill(int slot, ISkill skill);
 
     StoreSlot getSkillInSlot(int slot);
 
