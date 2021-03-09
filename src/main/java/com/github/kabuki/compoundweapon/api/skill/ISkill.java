@@ -7,4 +7,6 @@ public interface ISkill {
     ISkillRelease getDevice();
 
     void release(ISkillContext context);
+
+    String getName();
 }
