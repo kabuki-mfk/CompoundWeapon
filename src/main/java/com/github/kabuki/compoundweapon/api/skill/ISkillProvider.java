@@ -12,7 +12,7 @@ public interface ISkillProvider {
 
     int hasApplyRelease(DeviceType type, EntityLivingBase entityLivingBase);
 
-    void release(ISkillRelease ISkillRelease, World worldIn, BlockPos pos, Entity entityIn, ItemStack stack);
+    void release(ISkillRelease skillRelease, World worldIn, BlockPos pos, Entity entityIn, ItemStack stack);
 
     void release(int slot, World worldIn, BlockPos pos, EntityLivingBase entityIn, ItemStack stack);
 
