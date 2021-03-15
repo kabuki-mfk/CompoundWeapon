@@ -8,5 +8,13 @@ public interface ISkill {
 
     void release(ISkillContext context);
 
+    long getDelay();
+
+    long getCoolDown();
+
+    void setDelay(long delay);
+
+    void setCooldown(long cooldown);
+
     String getName();
 }
