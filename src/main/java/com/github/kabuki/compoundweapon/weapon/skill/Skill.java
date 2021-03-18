@@ -24,4 +24,29 @@ public class Skill implements ISkill {
     public void release(ISkillContext context) {
 
     }
+
+    @Override
+    public long getDelay() {
+        return delay;
+    }
+
+    @Override
+    public long getCoolDown() {
+        return cooldown;
+    }
+
+    @Override
+    public void setDelay(long delay) {
+        this.delay = delay;
+    }
+
+    @Override
+    public void setCooldown(long cooldown) {
+        this.cooldown = cooldown;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
 }

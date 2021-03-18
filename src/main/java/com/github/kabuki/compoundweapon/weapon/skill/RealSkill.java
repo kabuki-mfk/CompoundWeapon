@@ -7,11 +7,14 @@ import com.github.kabuki.compoundweapon.api.skill.service.ISkillContext;
 public class RealSkill implements ISkill {
 
     private final ISkill skill;
+    private long delay;
     private long cd;
 
     public RealSkill(ISkill skillIn)
     {
         this.skill = skillIn;
+        this.delay = skillIn.getDelay();
+        this.cd = skillIn.getCoolDown();
     }
 
     @Override
@@ -22,6 +25,26 @@ public class RealSkill implements ISkill {
     @Override
     public void release(ISkillContext context) {
         skill.release(context);
+    }
+
+    @Override
+    public long getDelay() {
+        return this.delay;
+    }
+
+    @Override
+    public long getCoolDown() {
+        return this.cd;
+    }
+
+    @Override
+    public void setDelay(long delay) {
+        this.delay = delay;
+    }
+
+    @Override
+    public void setCooldown(long cooldown) {
+        this.cd = cooldown;
     }
 
     @Override
