@@ -3,10 +3,12 @@ package com.github.kabuki.compoundweapon.weapon.material;
 import com.github.kabuki.compoundweapon.CompoundWeapon;
 import com.github.kabuki.compoundweapon.api.weapon.IWeaponMaterial;
 import com.github.kabuki.compoundweapon.api.weapon.data.IWeaponAttributes;
+import com.github.kabuki.compoundweapon.common.registries.WeaponRegistry;
 import com.github.kabuki.compoundweapon.weapon.attribute.Attribute;
 import com.github.kabuki.compoundweapon.weapon.attribute.WeaponAttributes;
 
 public class WeaponMaterial implements IWeaponMaterial, Cloneable {
+    public static final WeaponRegistry REGISTRY = WeaponRegistry.getInstance();
 
     private IWeaponAttributes attributes = new WeaponAttributes();
     private String name;
