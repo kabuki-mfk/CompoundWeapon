@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import org.apache.logging.log4j.Logger;
 
 @Mod(
         modid = CompoundWeapon.MOD_ID,
@@ -23,6 +24,8 @@ public class CompoundWeapon {
     @Mod.Instance(MOD_ID)
     public static CompoundWeapon INSTANCE;
 
+    public static Logger LOGGER;
+
     @SidedProxy(
             clientSide = "com.github.kabuki.compoundweapon.client.ClientProxy",
             serverSide = "com.github.kabuki.compoundweapon.common.CommonProxy",
@@ -32,6 +35,7 @@ public class CompoundWeapon {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        LOGGER = event.getModLog();
         proxy.preInit(event);
     }
 
