@@ -8,6 +8,8 @@ public abstract class AbstractRegistry<T> {
 
     public void register(String name, T entry)
     {
+        if(getRegistry().containsKey(name))
+            throw new IllegalStateException("The entry is already registered");
         getRegistry().put(name, entry);
     }
 
