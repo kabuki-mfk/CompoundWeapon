@@ -11,4 +11,6 @@ public interface ISideTaskService {
     boolean interruptTask(Entity interruptTarget);
 
     DelayedTask getTask(int id);
+
+    boolean hasTask(int id);
 }
