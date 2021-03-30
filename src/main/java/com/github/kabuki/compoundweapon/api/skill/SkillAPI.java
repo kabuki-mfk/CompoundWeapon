@@ -1,12 +1,10 @@
 package com.github.kabuki.compoundweapon.api.skill;
 
-import com.github.kabuki.compoundweapon.api.skill.DeviceType;
-import com.github.kabuki.compoundweapon.api.skill.ISkillProvider;
-import com.github.kabuki.compoundweapon.api.skill.SkillDamageSource;
 import com.github.kabuki.compoundweapon.api.skill.service.ISideTaskService;
 import com.github.kabuki.compoundweapon.api.weapon.ICombatWeapon;
 import com.github.kabuki.compoundweapon.client.SkillTaskClientService;
 import com.github.kabuki.compoundweapon.common.capability.CapabilitySkillProvider;
+import com.github.kabuki.compoundweapon.common.registries.SkillRegistry;
 import com.github.kabuki.compoundweapon.weapon.skill.service.SkillTaskServerService;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -76,5 +74,15 @@ public class SkillAPI {
     public static DamageSource causeSkillDamageSource(Entity source)
     {
         return new SkillDamageSource(source);
+    }
+
+    public static void registerSkill(ISkill skill, String registerName)
+    {
+        SkillRegistry.getInstance().register(registerName, skill);
+    }
+
+    public static ISkill getSkillFromName(String name)
+    {
+        return SkillRegistry.getInstance().getRegistryElement(name);
     }
 }
