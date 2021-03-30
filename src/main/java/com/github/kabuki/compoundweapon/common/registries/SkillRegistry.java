@@ -1,13 +1,14 @@
 package com.github.kabuki.compoundweapon.common.registries;
 
+import com.github.kabuki.compoundweapon.api.skill.ISkill;
 import com.github.kabuki.compoundweapon.weapon.skill.Skill;
 
 import java.util.Map;
 
-public class SkillRegistry extends AbstractRegistry<Skill> {
+public class SkillRegistry extends AbstractRegistry<ISkill> {
 
     private static final SkillRegistry INSTANCE = new SkillRegistry();
-    private Map<String, Skill> registry;
+    private Map<String, ISkill> registry;
 
     private SkillRegistry()
     {
@@ -19,13 +20,13 @@ public class SkillRegistry extends AbstractRegistry<Skill> {
     }
 
     @Override
-    public Map<String, Skill> getRegistry() {
+    public Map<String, ISkill> getRegistry() {
         return registry;
     }
 
     @Override
-    public Skill getRegistryElement(String key) {
-        Skill skill = registry.get(key);
+    public ISkill getRegistryElement(String key) {
+        ISkill skill = registry.get(key);
         return skill == null ? Skill.MISSING : skill;
     }
 }
