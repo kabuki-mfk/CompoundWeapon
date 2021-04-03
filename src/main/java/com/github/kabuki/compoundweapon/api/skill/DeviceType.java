@@ -13,6 +13,18 @@ public enum DeviceType {
         this.symbol = symbol;
     }
 
+    public static DeviceType fromString(String str) {
+        switch(str.toLowerCase())
+        {
+            case "attack":
+                return ATTACK;
+            case "interact":
+                return INTERACT;
+            default:
+                return NONE;
+        }
+    }
+
     public String getSimpleChat()
     {
         return symbol;
