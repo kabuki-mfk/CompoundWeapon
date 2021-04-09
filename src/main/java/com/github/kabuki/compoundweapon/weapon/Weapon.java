@@ -81,4 +81,6 @@ public class Weapon extends Item implements IWeapon {
         return super.onItemRightClick(worldIn, playerIn, handIn);
     }
 
+    public void onAttack(ItemStack stack, EntityLivingBase target, EntityLivingBase attacker) {
+    }
 }
