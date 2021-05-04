@@ -9,11 +9,10 @@ public class DataObject implements IDataObject {
     public DataObject(Object objIn)
     {
         checkType(objIn);
-        if(objIn instanceof DataObject)
         this.value = objIn;
     }
 
-    private final void checkType(Object object)
+    private void checkType(Object object)
     {
         if(object instanceof DataObject)
             throw new IllegalArgumentException("object class cannot be DataObject");
