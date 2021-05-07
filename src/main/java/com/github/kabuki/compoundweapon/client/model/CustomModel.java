@@ -1,11 +1,13 @@
 package com.github.kabuki.compoundweapon.client.model;
 
 import com.github.kabuki.compoundweapon.CompoundWeapon;
+import com.github.kabuki.compoundweapon.client.ModelRegistryHandler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
@@ -16,7 +18,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.obj.OBJModel;
 import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 import net.minecraftforge.common.model.IModelPart;
 import net.minecraftforge.common.model.IModelState;
@@ -38,7 +39,7 @@ public class CustomModel implements IModel {
     private final MaterialManager materialManager;
     private final CustomResourceLocation resourceLocation;
     private final ModelType modelType;
-    private CustomData customData;
+    private final CustomData customData;
 
     public CustomModel(MaterialManager mtlLib, CustomResourceLocation modelLocation, ModelType type)
     {
@@ -65,14 +66,12 @@ public class CustomModel implements IModel {
 
     @Override
     public Collection<ResourceLocation> getTextures() {
-        List<ResourceLocation> list = Lists.newArrayList();
-        for(Material material : materialManager.materials.values())
+        for (Material material : materialManager.materials.values())
         {
-            ResourceLocation resourceLocation = material.texture.getTexturePath();
-            if(list.contains(resourceLocation) || material.isWhite()) continue;
-            list.add(resourceLocation);
+            if(material.isWhite()) continue;
+            ModelRegistryHandler.registryCustomTextureSprite(new CustomTexture(material.texture.texturePath));
         }
-        return list;
+        return Lists.newArrayList();
     }
 
     public static class CustomBakedModel implements IBakedModel {
@@ -340,12 +339,12 @@ public class CustomModel implements IModel {
         private final MaterialManager mtlManager = new MaterialManager();
         private final CustomResourceLocation resourceLocation;
         private final ModelPack modelPack;
-        private BufferedReader reader;
+        private final BufferedReader reader;
 
-        private List<String> groupList = Lists.newArrayList();
-        private List<Vertex> verteies = Lists.newArrayList();
-        private List<Vector3f> normals = Lists.newArrayList();
-        private List<TextureCoordinate> textureCoordinates = Lists.newArrayList();
+        private final List<String> groupList = Lists.newArrayList();
+        private final List<Vertex> vertices = Lists.newArrayList();
+        private final List<Vector3f> normals = Lists.newArrayList();
+        private final List<TextureCoordinate> textureCoordinates = Lists.newArrayList();
 
         public OBJParser(ModelPack.ModelResource source, ModelPack modelPack) {
             this.resourceLocation = source.getModelResourceLocation();
@@ -396,7 +395,7 @@ public class CustomModel implements IModel {
                     case "v":
                         float[] v = parseFloats(splitData);
                         Vector4f vec4f = new Vector4f(v[0], v[1], v[2], v.length == 4 ? v[3] : 1.0f);
-                        this.verteies.add(new Vertex(vec4f, material));
+                        this.vertices.add(new Vertex(vec4f, material));
                         break;
                     case "vn":
                         float[] vn = parseFloats(splitData);
@@ -414,8 +413,8 @@ public class CustomModel implements IModel {
                         {
                             String[] vtn = splitData[i].split("/");
                             int vIdx = Integer.parseInt(vtn[0]);
-                            vIdx = vIdx < 0 ? verteies.size() - 1 : vIdx - 1;
-                            Vertex newV = new Vertex(new Vector4f(this.verteies.get(vIdx).pos), material);
+                            vIdx = vIdx < 0 ? vertices.size() - 1 : vIdx - 1;
+                            Vertex newV = new Vertex(new Vector4f(this.vertices.get(vIdx).pos), material);
 
                             if(!(vtn.length < 2  || StringUtils.isNullOrEmpty(vtn[1]))) {
                                 int vtIdx = Integer.parseInt(vtn[1]);
@@ -479,8 +478,8 @@ public class CustomModel implements IModel {
     }
 
     public static class Face {
-        private Vertex[] vertices;
-        private Material material;
+        private final Vertex[] vertices;
+        private final Material material;
 
         public Face(Vertex[] va, Material material) {
             this.vertices = va;
@@ -643,8 +642,9 @@ public class CustomModel implements IModel {
                 new TextureCoordinate(1.0f, 0.0f, 1.0f),
                 new TextureCoordinate(1.0f, 1.0f, 1.0f),
                 new TextureCoordinate(0.0f, 1.0f, 1.0f)
-        }
-        private Vector3f data;
+        };
+
+        private final Vector3f data;
 
         public TextureCoordinate(float u, float v, float w)
         {
@@ -659,7 +659,7 @@ public class CustomModel implements IModel {
 
     public static class Texture {
         public final static Texture WHITE = new Texture("CustomModel.Default.Texture.Name");
-        private String texturePath;
+        private final String texturePath;
         private Vector2f position;
         private Vector2f scale;
         private float rotation;

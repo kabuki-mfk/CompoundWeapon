@@ -63,4 +63,7 @@ public enum ModelManager implements ICustomModelLoader {
         return null;
     }
 
+    public ModelPack getModelPack() {
+        return modelPack;
+    }
 }
