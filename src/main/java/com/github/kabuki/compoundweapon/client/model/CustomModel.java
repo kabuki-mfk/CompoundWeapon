@@ -1,6 +1,8 @@
 package com.github.kabuki.compoundweapon.client.model;
 
 import com.github.kabuki.compoundweapon.CompoundWeapon;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.minecraft.block.state.IBlockState;
@@ -13,7 +15,12 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.obj.OBJModel;
+import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
+import net.minecraftforge.common.model.IModelPart;
 import net.minecraftforge.common.model.IModelState;
+import net.minecraftforge.common.model.TRSRTransformation;
 
 import javax.annotation.Nullable;
 import javax.vecmath.Vector2f;
@@ -31,17 +38,29 @@ public class CustomModel implements IModel {
     private final MaterialManager materialManager;
     private final CustomResourceLocation resourceLocation;
     private final ModelType modelType;
+    private CustomData customData;
 
     public CustomModel(MaterialManager mtlLib, CustomResourceLocation modelLocation, ModelType type)
+    {
+        this(mtlLib, modelLocation, type, new CustomData());
+    }
+
+    public CustomModel(MaterialManager mtlLib, CustomResourceLocation modelLocation, ModelType type, CustomData customData)
     {
         this.materialManager = mtlLib;
         this.resourceLocation = modelLocation;
         this.modelType = type;
+        this.customData = customData;
     }
 
     @Override
     public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
         return null;
+    }
+
+    @Override
+    public IModel process(ImmutableMap<String, String> customData) {
+        return IModel.super.process(customData);
     }
 
     @Override
@@ -56,22 +75,121 @@ public class CustomModel implements IModel {
         return list;
     }
 
-    public static class CustomBakedModel implements IBakedModel
-    {
+    public static class CustomBakedModel implements IBakedModel {
+
+        private CustomModel customModel;
+        private IModelState modelState;
+        private VertexFormat vertexFormat;
+        private ImmutableMap<String, TextureAtlasSprite> textures;
+        private List<BakedQuad> quads;
+        private TextureAtlasSprite sprite = ModelLoader.White.INSTANCE;
+
+        public CustomBakedModel(CustomModel model, IModelState modelState, VertexFormat format, ImmutableMap<String, TextureAtlasSprite> textures)
+        {
+            this.customModel = model;
+            this.modelState = modelState;
+            this.vertexFormat = format;
+            this.textures = textures;
+        }
 
         @Override
         public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
-            return null;
+            if(side != null || state != null) return ImmutableList.of();
+            if(quads == null) quads = createQuads(modelState);
+            return quads;
+        }
+
+        private List<BakedQuad> createQuads(IModelState state) {
+            List<BakedQuad> bakedQuads = Lists.newArrayList();
+
+            Optional<TRSRTransformation> transformation = Optional.empty();
+
+            if(state instanceof CustomModelState)
+            {
+                CustomModelState customModelState = (CustomModelState) state;
+                if(customModelState.parent != null)
+                {
+                    transformation = customModelState.parent.apply(Optional.empty());
+                }
+            }
+            else
+            {
+                transformation = state.apply(Optional.empty());
+            }
+
+            Set<Face> faces = new LinkedHashSet<>();
+            TRSRTransformation trsrf = transformation.orElse(TRSRTransformation.identity());
+            for(LinkedHashSet<Face> group : customModel.materialManager.groups.values())
+            {
+                LinkedHashSet<Face> faceSet = new LinkedHashSet<>();
+                for(Face f : group) {
+                    faceSet.add(f.bake(trsrf));
+                }
+                faces.addAll(group);
+            }
+
+            for (Face f : faces)
+            {
+                sprite = f.material.isWhite() ? ModelLoader.White.INSTANCE : textures.get(f.material.mtlName);
+                Vector3f normal = f.getNormal();
+                UnpackedBakedQuad.Builder builder = new UnpackedBakedQuad.Builder(vertexFormat);
+                builder.setContractUVs(true);
+                builder.setQuadOrientation(EnumFacing.getFacingFromVector(normal.x, normal.y, normal.z));
+                builder.setTexture(sprite);
+                bakedQuads.add(builder.build());
+                putVertexData(builder, f.vertices[0], normal, TextureCoordinate.DEFAULT_COORDINATES[0], sprite);
+                putVertexData(builder, f.vertices[1], normal, TextureCoordinate.DEFAULT_COORDINATES[1], sprite);
+                putVertexData(builder, f.vertices[2], normal, TextureCoordinate.DEFAULT_COORDINATES[2], sprite);
+                putVertexData(builder, f.vertices[f.isTriangles() ? 2 : 3], normal, TextureCoordinate.DEFAULT_COORDINATES[3], sprite);
+            }
+            return bakedQuads;
+        }
+
+        private void putVertexData(UnpackedBakedQuad.Builder builder, Vertex v, Vector3f faceNormal, TextureCoordinate defUV, TextureAtlasSprite sprite) {
+            for(int e = 0; e < vertexFormat.getElementCount(); e++)
+            {
+                switch (vertexFormat.getElement(e).getUsage())
+                {
+                    case POSITION:
+                        builder.put(e, v.pos.x, v.pos.y, v.pos.z);
+                        break;
+                    case COLOR:
+                        if(v.getMaterial() != null) {
+                            Vector4f color = v.getMaterial().getColor();
+                            builder.put(e, color.x, color.y, color.z, color.w);
+                        }
+                        else builder.put(e, 1, 1, 1, 1);
+                        break;
+                    case UV:
+                        if(v.getTextureCoordinate() == null)
+                            builder.put(e,
+                                    sprite.getInterpolatedU(defUV.getUVW().x * 16) ,
+                                    sprite.getInterpolatedV(defUV.getUVW().y) * 16,
+                                    1, 0);
+                        else
+                            builder.put(e,
+                                    sprite.getInterpolatedU(v.getTextureCoordinate().getUVW().x * 16) ,
+                                    sprite.getInterpolatedV(v.getTextureCoordinate().getUVW().y) * 16,
+                                    1, 0);
+                        break;
+                    case NORMAL:
+                        if(v.getNormal() == null)
+                            builder.put(e, faceNormal.x, faceNormal.y, faceNormal.z);
+                        else
+                            builder.put(e, v.getNormal().x, v.getNormal().y, v.getNormal().z);
+                }
+
+            }
         }
 
         @Override
         public boolean isAmbientOcclusion() {
-            return false;
+            return customModel == null || customModel.customData.isAmbient;
         }
 
         @Override
         public boolean isGui3d() {
-            return false;
+            return customModel == null || customModel.customData.isGui3d;
         }
 
         @Override
@@ -81,15 +199,42 @@ public class CustomModel implements IModel {
 
         @Override
         public TextureAtlasSprite getParticleTexture() {
-            return null;
+            return sprite;
         }
 
         @Override
         public ItemOverrideList getOverrides() {
-            return null;
+            return ItemOverrideList.NONE;
         }
     }
-    s
+
+    public static class CustomModelState implements IModelState {
+
+        public IModelState parent = TRSRTransformation.identity();
+
+        @Override
+        public Optional<TRSRTransformation> apply(Optional<? extends IModelPart> part) {
+            if(parent != null) parent.apply(part);
+            return Optional.empty();
+        }
+
+    }
+
+    public static class CustomData {
+        public boolean isAmbient;
+        public boolean isGui3d;
+
+        public CustomData()
+        {
+
+        }
+
+        public CustomData(Map<String, String> data)
+        {
+
+        }
+    }
+
     public static class MaterialManager
     {
         private static final Pattern WHITE_SPACE = Pattern.compile("\\s+");
@@ -264,7 +409,7 @@ public class CustomModel implements IModel {
                                 vt.length >= 3 ? vt[2] : 1.0f));
                         break;
                     case "f":
-                        Vertex[] va = new Vertex[4];
+                        Vertex[] va = new Vertex[splitData.length];
                         for (int i = 0; i < splitData.length; i++)
                         {
                             String[] vtn = splitData[i].split("/");
@@ -279,7 +424,7 @@ public class CustomModel implements IModel {
 
                             if(!(vtn.length < 3  || StringUtils.isNullOrEmpty(vtn[2]))) {
                                 int vtIdx = Integer.parseInt(vtn[2]);
-                                newV.setTextureCoordinate(textureCoordinates.get(vtIdx < 0 ? textureCoordinates.size() - 1 : vtIdx - 1));
+                                newV.setNormal(new Vector3f(normals.get(vtIdx < 0 ? textureCoordinates.size() - 1 : vtIdx)));
                             }
                             va[i] = newV;
                         }
@@ -329,7 +474,7 @@ public class CustomModel implements IModel {
                                 lineData[0], resourceLocation, lineNum, line);
                 }
             }
-            return new CustomModel(mtlManager, resourceLocation);
+            return new CustomModel(mtlManager, resourceLocation, ModelType.OBJ);
         }
     }
 
@@ -345,6 +490,54 @@ public class CustomModel implements IModel {
         public boolean isTriangles()
         {
             return vertices.length == 3;
+        }
+
+        public Face bake(TRSRTransformation transformation)
+        {
+            Vertex[] ves = new Vertex[vertices.length];
+
+            for(int i = 0; i < vertices.length; i++)
+            {
+                Vertex v = vertices[i];
+                Vector4f pos = new Vector4f(v.pos);
+                transformation.transformPosition(pos);
+                Vertex v1 = new Vertex(pos, v.getMaterial());
+
+                if(v.getTextureCoordinate() != null) {
+                    v1.setTextureCoordinate(v.getTextureCoordinate());
+                }
+
+                if(v.getNormal() != null) {
+                    Vector3f normal = new Vector3f(v.normal.x, v.normal.y, v.normal.z);
+                    transformation.transformNormal(normal);
+                    v1.setNormal(normal);
+                }
+                ves[i] = v1;
+            }
+            return new Face(ves, this.material);
+        }
+
+        public Vector3f getNormal()
+        {
+            Vector3f a;
+            Vector3f b;
+            if(isTriangles())
+            {
+                a = vertices[1].getPos3();
+                b = vertices[2].getPos3();
+                a.sub(vertices[0].getPos3());
+                b.sub(vertices[0].getPos3());
+            }
+            else
+            {
+                a = vertices[2].getPos3();
+                b = vertices[3].getPos3();
+                a.sub(vertices[0].getPos3());
+                b.sub(vertices[1].getPos3());
+            }
+            a.cross(a, b);
+            a.normalize();
+            return a;
         }
     }
 
@@ -369,6 +562,27 @@ public class CustomModel implements IModel {
 
         public void setNormal(Vector3f normal) {
             this.normal = normal;
+        }
+
+        public Vector4f getPos() {
+            return pos;
+        }
+
+        public Vector3f getPos3()
+        {
+            return new Vector3f(pos.x, pos.y, pos.z);
+        }
+
+        public Material getMaterial() {
+            return material;
+        }
+
+        public Vector3f getNormal() {
+            return normal;
+        }
+
+        public TextureCoordinate getTextureCoordinate() {
+            return textureCoordinate;
         }
     }
 
@@ -424,6 +638,12 @@ public class CustomModel implements IModel {
     }
 
     public static class TextureCoordinate {
+        private static final TextureCoordinate[] DEFAULT_COORDINATES = {
+                new TextureCoordinate(0.0f, 0.0f, 1.0f),
+                new TextureCoordinate(1.0f, 0.0f, 1.0f),
+                new TextureCoordinate(1.0f, 1.0f, 1.0f),
+                new TextureCoordinate(0.0f, 1.0f, 1.0f)
+        }
         private Vector3f data;
 
         public TextureCoordinate(float u, float v, float w)
