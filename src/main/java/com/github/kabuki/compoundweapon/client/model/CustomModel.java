@@ -7,11 +7,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -24,7 +24,6 @@ import net.minecraftforge.common.model.IModelState;
 import net.minecraftforge.common.model.TRSRTransformation;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.io.BufferedReader;
@@ -56,12 +55,27 @@ public class CustomModel implements IModel {
 
     @Override
     public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
-        return null;
+        ImmutableMap.Builder<String, TextureAtlasSprite> builder = ImmutableMap.builder();
+        builder.put(ModelLoader.White.LOCATION.toString(), ModelLoader.White.INSTANCE);
+        TextureAtlasSprite missing = bakedTextureGetter.apply(TextureMap.LOCATION_MISSING_TEXTURE);
+        for(Map.Entry<String, Material> e : materialManager.materials.entrySet())
+        {
+            TextureAtlasSprite sprite = bakedTextureGetter.apply(e.getValue().texture.getTexturePath());
+            if(sprite instanceof CustomTexture && ((CustomTexture) sprite).isMissingTexture())
+            {
+                builder.put(e.getKey(), missing);
+            }
+            else
+            {
+                builder.put( e.getKey(), sprite);
+            }
+        }
+        return new CustomBakedModel(this, state, format, builder.build());
     }
 
     @Override
     public IModel process(ImmutableMap<String, String> customData) {
-        return IModel.super.process(customData);
+        return new CustomModel(materialManager, resourceLocation, modelType, new CustomData(customData));
     }
 
     @Override
@@ -76,10 +90,10 @@ public class CustomModel implements IModel {
 
     public static class CustomBakedModel implements IBakedModel {
 
-        private CustomModel customModel;
-        private IModelState modelState;
-        private VertexFormat vertexFormat;
-        private ImmutableMap<String, TextureAtlasSprite> textures;
+        private final CustomModel customModel;
+        private final IModelState modelState;
+        private final VertexFormat vertexFormat;
+        private final ImmutableMap<String, TextureAtlasSprite> textures;
         private List<BakedQuad> quads;
         private TextureAtlasSprite sprite = ModelLoader.White.INSTANCE;
 
@@ -124,7 +138,7 @@ public class CustomModel implements IModel {
                 for(Face f : group) {
                     faceSet.add(f.bake(trsrf));
                 }
-                faces.addAll(group);
+                faces.addAll(faceSet);
             }
 
             for (Face f : faces)
@@ -176,6 +190,9 @@ public class CustomModel implements IModel {
                             builder.put(e, faceNormal.x, faceNormal.y, faceNormal.z);
                         else
                             builder.put(e, v.getNormal().x, v.getNormal().y, v.getNormal().z);
+                        break;
+                    default:
+                        builder.put(e);
                 }
 
             }
@@ -222,15 +239,32 @@ public class CustomModel implements IModel {
     public static class CustomData {
         public boolean isAmbient;
         public boolean isGui3d;
+        public boolean flipV;
 
-        public CustomData()
-        {
+        public CustomData() {
 
         }
 
-        public CustomData(Map<String, String> data)
-        {
+        public CustomData(Map<String, String> data) {
+            process(data);
+        }
 
+        public void process(Map<String, String> customData)
+        {
+            for (Map.Entry<String, String> e : customData.entrySet())
+            {
+                switch (e.getKey()) {
+                    case "ambient":
+                        this.isAmbient = Boolean.parseBoolean(e.getValue());
+                        break;
+                    case "gui3d":
+                        this.isGui3d = Boolean.parseBoolean(e.getValue());
+                        break;
+                    case "flip-v":
+                        this.flipV = Boolean.parseBoolean(e.getValue());
+                        break;
+                }
+            }
         }
     }
 
@@ -264,9 +298,10 @@ public class CustomModel implements IModel {
 
             this.materials.clear();
 
-            if (!mtlPath.contains("/"))
-                mtlPath = location.getNamespace() + mtlPath;
-            CustomResourceLocation mtlLocation = new CustomResourceLocation(mtlPath, null);
+            String path = mtlPath;
+            if (!path.contains("/"))
+                path = location.getNamespace() + mtlPath;
+            CustomResourceLocation mtlLocation = new CustomResourceLocation(path, null);
 
             try(ModelPack.ModelResource resource = modelPack.getModelResource(mtlLocation))
             {
@@ -287,7 +322,6 @@ public class CustomModel implements IModel {
 
                     String[] lineData = WHITE_SPACE.split(line, 2);
                     String data = lineData[1];
-                    String[] splitData = WHITE_SPACE.split(data);
 
                     switch (lineData[0])
                     {
@@ -302,7 +336,7 @@ public class CustomModel implements IModel {
                         case "ks":
                             String[] rgbStr = WHITE_SPACE.split(data, 3);
                             if(!hasColor || lineData[0].equals("kd")) {
-                                material.setColor(new Vector4f(Float.parseFloat(rgbStr[0]), Float.parseFloat(rgbStr[0]), Float.parseFloat(rgbStr[0]), 1.0f));
+                                material.setColor(new Vector4f(Float.parseFloat(rgbStr[0]), Float.parseFloat(rgbStr[1]), Float.parseFloat(rgbStr[2]), 1.0f));
                                 hasColor = true;
                             }
                             break;
@@ -541,7 +575,7 @@ public class CustomModel implements IModel {
     }
 
     public static class Vertex {
-        private Vector4f pos;
+        private final Vector4f pos;
         private Material material;
         private Vector3f normal;
         private TextureCoordinate textureCoordinate;
@@ -660,9 +694,6 @@ public class CustomModel implements IModel {
     public static class Texture {
         public final static Texture WHITE = new Texture("CustomModel.Default.Texture.Name");
         private final String texturePath;
-        private Vector2f position;
-        private Vector2f scale;
-        private float rotation;
 
         public Texture(String path) {
             texturePath = path;

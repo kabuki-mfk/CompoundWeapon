@@ -4,6 +4,7 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.IOUtils;
@@ -51,16 +52,23 @@ public enum ModelManager implements ICustomModelLoader {
     public IModel loadModel(ResourceLocation modelLocation) throws Exception {
         CustomResourceLocation resourceLocation = (CustomResourceLocation) modelLocation;
         ModelPack.ModelResource resource = null;
-        
+        IModel model = null;
+
         try
         {
             resource = modelPack.getModelResource(resourceLocation);
-
+            if(resourceLocation.getModelType() == ModelType.OBJ)
+            {
+                CustomModel.OBJParser parser = new CustomModel.OBJParser(resource, modelPack);
+                model = parser.parser();
+            }
         }
         finally {
             IOUtils.closeQuietly(resource);
         }
-        return null;
+
+        if (model == null) model = ModelLoaderRegistry.getMissingModel();
+        return model;
     }
 
     public ModelPack getModelPack() {

@@ -18,6 +18,8 @@ import java.util.function.Function;
 @SideOnly(Side.CLIENT)
 public class CustomTexture extends TextureAtlasSprite {
 
+    private boolean isMissing;
+
     public CustomTexture(CustomResourceLocation location) {
         this(location.getPath());
     }
@@ -46,11 +48,17 @@ public class CustomTexture extends TextureAtlasSprite {
             this.width = image.getWidth();
         } catch (ResourcePackFileNotFoundException packFileNotFoundException) {
             CompoundWeapon.LOGGER.error("TexturePNG#load: missing texture, path '{}'", resourceLocation.getLocation());
+            isMissing = true;
             return true;
         } catch (IOException e) {
             CompoundWeapon.LOGGER.error("TexturePNG#load: error on load texture, path '{}'", resourceLocation.getLocation());
+            isMissing = true;
             return true;
         }
         return false;
+    }
+
+    public boolean isMissingTexture() {
+        return isMissing;
     }
 }
