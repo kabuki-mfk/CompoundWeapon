@@ -1,6 +1,10 @@
 package com.github.kabuki.compoundweapon;
 
+import com.github.kabuki.compoundweapon.client.model.CustomResourceLocation;
+import com.github.kabuki.compoundweapon.client.model.ModelManager;
 import com.github.kabuki.compoundweapon.common.CommonProxy;
+import com.github.kabuki.compoundweapon.designer.skill.SkillDeserializer;
+import com.github.kabuki.compoundweapon.designer.weapon.WeaponDeserializer;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -8,6 +12,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
 
 @Mod(
         modid = CompoundWeapon.MOD_ID,
@@ -37,6 +44,9 @@ public class CompoundWeapon {
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER = event.getModLog();
         proxy.preInit(event);
+
+        File dir = event.getModConfigurationDirectory().getParentFile();
+        CustomResourceLocation.modelDir = new File(dir, "mods/CompoundWeapon/Custom/Model");
     }
 
     @Mod.EventHandler
