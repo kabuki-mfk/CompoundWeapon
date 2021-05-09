@@ -74,8 +74,8 @@ public class CustomModel implements IModel {
     }
 
     @Override
-    public IModel process(ImmutableMap<String, String> customData) {
-        return new CustomModel(materialManager, resourceLocation, modelType, new CustomData(customData));
+    public IModel process(ImmutableMap<String, String> data) {
+        return new CustomModel(materialManager, resourceLocation, modelType, new CustomData(customData, data));
     }
 
     @Override
@@ -193,6 +193,7 @@ public class CustomModel implements IModel {
                         break;
                     default:
                         builder.put(e);
+                        break;
                 }
 
             }
@@ -245,7 +246,10 @@ public class CustomModel implements IModel {
 
         }
 
-        public CustomData(Map<String, String> data) {
+        public CustomData(CustomData parent, Map<String, String> data) {
+            this.isAmbient = parent.isAmbient;
+            this.isGui3d = parent.isGui3d;
+            this.flipV = parent.flipV;
             process(data);
         }
 
@@ -262,6 +266,8 @@ public class CustomModel implements IModel {
                         break;
                     case "flip-v":
                         this.flipV = Boolean.parseBoolean(e.getValue());
+                        break;
+                    default:
                         break;
                 }
             }

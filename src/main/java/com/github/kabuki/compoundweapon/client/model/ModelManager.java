@@ -1,5 +1,6 @@
 package com.github.kabuki.compoundweapon.client.model;
 
+import com.github.kabuki.compoundweapon.CompoundWeapon;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ICustomModelLoader;
@@ -23,13 +24,13 @@ public enum ModelManager implements ICustomModelLoader {
 
     public void initLoadDir(File modDir) {
         modelDir = new File(modDir, "mods/CompoundWeapon/Custom/Model");
-        if(modDir.exists())
+        if(modelDir.exists())
         {
             modelPack = new ModelPack(modelDir);
         }
         else
         {
-            modDir.mkdirs();
+            this.modelDir.mkdirs();
         }
     }
 

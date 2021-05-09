@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
 
 @Mod.EventBusSubscriber(value = Side.CLIENT, modid = CompoundWeapon.MOD_ID)
 public class ModelRegistryHandler {
-    private static LinkedHashSet<TextureAtlasSprite> textureAtlasSprites;
+    private static final LinkedHashSet<TextureAtlasSprite> textureAtlasSprites = new LinkedHashSet<>();
 
     @SubscribeEvent
     public static void onTextureLoad(TextureStitchEvent.Pre event)
