@@ -56,7 +56,7 @@ public class ModelPack {
             throw new ResourcePackFileNotFoundException(dir, resourceLocation.toString());
         }
 
-        return new BufferedInputStream(new FileInputStream(file));
+        return new FileInputStream(file);
     }
 
     public static class ModelResource implements Closeable {
