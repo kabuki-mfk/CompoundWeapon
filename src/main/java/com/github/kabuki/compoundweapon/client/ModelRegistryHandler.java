@@ -23,7 +23,6 @@ public class ModelRegistryHandler {
     @SubscribeEvent
     public static void onModelRegistry(ModelRegistryEvent event)
     {
-        ModelManager.INSTANCE.registerItemModel(RegistryEventHandler.TEST, new VariantMapper(0, null, "cubes.obj", ModelType.OBJ));
         ModelManager.INSTANCE.onLoadModels();
     }
 
