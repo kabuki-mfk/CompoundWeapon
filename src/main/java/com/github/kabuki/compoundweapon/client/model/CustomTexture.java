@@ -40,12 +40,13 @@ public class CustomTexture extends TextureAtlasSprite {
         try {
             inputStream = ModelManager.INSTANCE.getModelPack().getInputStreamFrommLocation(resourceLocation);
             BufferedImage image = TextureUtil.readBufferedImage(inputStream);
-            int[][] aint = new int[Minecraft.getMinecraft().gameSettings.mipmapLevels][];
+            int[][] aint = new int[Minecraft.getMinecraft().gameSettings.mipmapLevels + 1][];
             aint[0] = new int[image.getHeight() * image.getWidth()];
-            image.getRGB(0, 0, image.getHeight(), image.getWidth(), aint[0], 0, image.getWidth());
+            image.getRGB(0, 0, image.getWidth(), image.getHeight(), aint[0], 0, image.getWidth());
+            clearFramesTextureData();
             framesTextureData.add(aint);
-            this.height = image.getHeight();
             this.width = image.getWidth();
+            this.height = image.getHeight();
         } catch (ResourcePackFileNotFoundException packFileNotFoundException) {
             CompoundWeapon.LOGGER.error("TexturePNG#load: missing texture, path '{}'", resourceLocation.getLocation());
             isMissing = true;
