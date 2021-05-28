@@ -8,10 +8,19 @@ import com.github.kabuki.compoundweapon.common.registries.SkillRegistry;
 public class Skill implements ISkill {
     public static final SkillRegistry REGISTRY = SkillRegistry.getInstance();
     public final static Skill MISSING = new Skill();
+    private final ISkillRelease skillRelease;
 
     private String name;
     private long delay;
     private long cooldown;
+
+    public Skill() {
+        this(SkillReleaseDevice.MISS);
+    }
+
+    public Skill(ISkillRelease skillRelease) {
+        this.skillRelease = skillRelease;
+    }
 
     public boolean isMissing() {
         return this == MISSING;
@@ -19,7 +28,7 @@ public class Skill implements ISkill {
 
     @Override
     public ISkillRelease getDevice() {
-        return null;
+        return this.skillRelease;
     }
 
     @Override
