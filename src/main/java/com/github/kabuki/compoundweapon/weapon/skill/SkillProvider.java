@@ -116,6 +116,8 @@ public class SkillProvider implements ISkillProvider {
                 context.setTagValue(e.getKey(), e.getValue());
             }
         }
+        if(entityIn != null)
+            context.setTagValue("EntitySource", entityIn);
 
         return context;
     }
