@@ -1,7 +1,5 @@
 package com.github.kabuki.compoundweapon;
 
-import com.github.kabuki.compoundweapon.client.model.CustomResourceLocation;
-import com.github.kabuki.compoundweapon.client.model.ModelManager;
 import com.github.kabuki.compoundweapon.common.CommonProxy;
 import com.github.kabuki.compoundweapon.designer.skill.SkillDeserializer;
 import com.github.kabuki.compoundweapon.designer.weapon.WeaponDeserializer;
@@ -46,7 +44,18 @@ public class CompoundWeapon {
         proxy.preInit(event);
 
         File dir = event.getModConfigurationDirectory().getParentFile();
-        CustomResourceLocation.modelDir = new File(dir, "mods/CompoundWeapon/Custom/Model");
+        loadDesigner(dir);
+    }
+
+    private void loadDesigner(File modDirectory)
+    {
+        try{
+            SkillDeserializer.INSTANCE.load(modDirectory);
+            WeaponDeserializer.INSTANCE.load(modDirectory);
+        }
+        catch (IOException e) {
+            LOGGER.error("loading phase failed", e);
+        }
     }
 
     @Mod.EventHandler
