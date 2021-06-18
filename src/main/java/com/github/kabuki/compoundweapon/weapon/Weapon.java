@@ -3,10 +3,10 @@ package com.github.kabuki.compoundweapon.weapon;
 import com.github.kabuki.compoundweapon.api.weapon.IWeapon;
 import com.github.kabuki.compoundweapon.api.weapon.IWeaponMaterial;
 import com.github.kabuki.compoundweapon.api.weapon.WeaponType;
-import com.github.kabuki.compoundweapon.api.weapon.data.IWeaponAttributes;
 import com.github.kabuki.compoundweapon.common.registries.WeaponRegistry;
 import com.github.kabuki.compoundweapon.weapon.attribute.WeaponAttributeHelper;
-import com.github.kabuki.compoundweapon.weapon.material.WeaponMaterial;
+import com.github.kabuki.compoundweapon.client.model.VariantMapper;
+import com.google.common.collect.Lists;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,9 +16,13 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
+import java.util.Collection;
+import java.util.List;
+
 public class Weapon extends Item implements IWeapon {
     public static WeaponRegistry REGISTRY = WeaponRegistry.getInstance();
 
+    private List<VariantMapper> resources = java.util.Collections.emptyList();
     protected WeaponType type;
     protected IWeaponMaterial material;
     protected boolean isOverrideMaterial;
@@ -82,5 +86,17 @@ public class Weapon extends Item implements IWeapon {
     }
 
     public void onAttack(ItemStack stack, EntityLivingBase target, EntityLivingBase attacker) {
+    }
+
+    public Weapon setResources(VariantMapper... resources) {
+        this.resources = Lists.newArrayList(resources);
+        return this;
+    }
+
+    @Override
+    public Collection<VariantMapper> getResource() {
+        if(resources.isEmpty())
+            return IWeapon.super.getResource();
+        return resources;
     }
 }
