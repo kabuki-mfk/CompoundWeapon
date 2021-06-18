@@ -14,4 +14,6 @@ public interface ISkillContext {
     Entity getTarget();
 
     void setTarget(Entity entity);
+
+    Entity getSource();
 }

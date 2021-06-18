@@ -4,6 +4,7 @@ import com.github.kabuki.compoundweapon.api.skill.service.ISkillContext;
 import com.github.kabuki.compoundweapon.api.skill.service.ISkillTag;
 import com.github.kabuki.compoundweapon.common.data.DataCompound;
 import com.github.kabuki.compoundweapon.utils.Factories;
+import com.github.kabuki.compoundweapon.weapon.skill.tag.SharedSkillTag;
 import com.google.common.collect.Lists;
 import net.minecraft.entity.Entity;
 
@@ -37,5 +38,10 @@ public class SkillContextImpl implements ISkillContext {
     @Override
     public void setTarget(Entity entity) {
         this.target = entity;
+    }
+
+    @Override
+    public Entity getSource() {
+        return dataCompound.getObjectData(SharedSkillTag.ENTITY_SOURCE, Entity.class);
     }
 }
