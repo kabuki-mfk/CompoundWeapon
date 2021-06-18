@@ -28,15 +28,15 @@ import net.minecraftforge.common.model.TRSRTransformation;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
+import javax.vecmath.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -178,6 +178,17 @@ public class CustomModel implements IModel {
             for (Face f : faces)
             {
                 sprite = f.material.isWhite() ? ModelLoader.White.INSTANCE : textures.get(f.material.mtlName);
+                if(f.material.isWhite())
+                {
+                    for(Vertex vertex : f.vertices)
+                    {
+                        Material m = this.customModel.materialManager.materials.get(vertex.getMaterial().mtlName);
+                        if (!vertex.getMaterial().equals(m))
+                        {
+                            vertex.setMaterial(m);
+                        }
+                    }
+                }
                 Vector3f normal = f.getNormal();
                 UnpackedBakedQuad.Builder builder = new UnpackedBakedQuad.Builder(vertexFormat);
                 EnumFacing enumFacing = EnumFacing.getFacingFromVector(normal.x, normal.y, normal.z);
@@ -191,7 +202,7 @@ public class CustomModel implements IModel {
                 putVertexData(builder, f.vertices[f.isTriangles() ? 2 : 3], normal, TextureCoordinate.DEFAULT_COORDINATES[3], sprite, enumFacing);
                 bakedQuads.add(builder.build());
             }
-            return bakedQuads;
+            return ImmutableList.copyOf(bakedQuads);
         }
 
         private void putVertexData(UnpackedBakedQuad.Builder builder, Vertex v, Vector3f faceNormal, TextureCoordinate defUV, TextureAtlasSprite sprite, EnumFacing side) {
@@ -200,8 +211,6 @@ public class CustomModel implements IModel {
             Vector3f uv = v.getTextureCoordinate() == null ? defUV.getUVW() : v.getTextureCoordinate().getUVW();
             float x0 = uv.x;
             float y0 = uv.y;
-            float dx = side.getDirectionVec().getX() * eps / sprite.getIconWidth();
-            float dy = side.getDirectionVec().getY() * eps / sprite.getIconHeight();
 
             for(int e = 0; e < vertexFormat.getElementCount(); e++)
             {
@@ -219,8 +228,8 @@ public class CustomModel implements IModel {
                         break;
                     case UV:
                             builder.put(e,
-                                    sprite.getInterpolatedU((x0 - dx) * 16),
-                                    sprite.getInterpolatedV((y0 - dy) * 16),
+                                    sprite.getInterpolatedU(x0 * 16),
+                                    sprite.getInterpolatedV((customModel.customData.flipV ? (1 - y0) : y0) * 16),
                                     1, 0);
                         break;
                     case NORMAL:
@@ -271,32 +280,84 @@ public class CustomModel implements IModel {
     public static class CustomModelState implements IModelState {
 
         public IModelState parent;
+        private Map<ItemCameraTransforms.TransformType, TRSRTransformation> transforms;
+
+        public static final TRSRTransformation FIRST_PERSON_RIGHT = new TRSRTransformation(new Vector3f(10.13f * 0.0625f, 3.2f * 0.0625f, 10.13f * 0.0625f), TRSRTransformation.quatFromXYZDegrees(new Vector3f(0, -90, 20)), new Vector3f(0.68f, 0.68f, 0.68f), null);
+        public static final TRSRTransformation THIRD_PERSON_RIGHT = new TRSRTransformation(new Vector3f(8.0f * 0.0625f, 0.0f * 0.0625f, 12.0f * 0.0625f), TRSRTransformation.quatFromXYZDegrees(new Vector3f(0, -90, 15)), new Vector3f(0.85f, 0.85f, 0.85f), null);
+        public static final TRSRTransformation FIRST_PERSON_LEFT = new TRSRTransformation(new Vector3f(10.13f * 0.0625f, 7.2f * 0.0625f, 20.13f * 0.0625f), TRSRTransformation.quatFromXYZDegrees(new Vector3f(0, 90, -20)), new Vector3f(0.68f, 0.68f, 0.68f), null);;
+        public static final TRSRTransformation THIRD_PERSON_LEFT = new TRSRTransformation(new Vector3f(8.0f * 0.0625f, 4.0f * 0.0625f, 24.0f * 0.0625f), TRSRTransformation.quatFromXYZDegrees(new Vector3f(0, 90, -15)), new Vector3f(0.85f, 0.85f, 0.85f), null);
+        public static final TRSRTransformation GUI_TRANSFORMATION = new TRSRTransformation(new Vector3f(0.5f, 0.5f, 0f), null, new Vector3f(0.9f, 0.9f, 0.9f), null);
+        public static final TRSRTransformation GROUND_TRANSFORMATION = new TRSRTransformation(new Vector3f(0.5f, 0.2f, 0.5f), null, new Vector3f(0.85f, 0.85f, 0.85f), null);
 
         public CustomModelState()
         {
-            this(TRSRTransformation.identity());
+            this(null);
         }
 
-        public CustomModelState(IModelState parent)
+        public CustomModelState(Map<ItemCameraTransforms.TransformType, TRSRTransformation> transforms) {
+            this(null, transforms);
+        }
+
+        public CustomModelState(IModelState parent, Map<ItemCameraTransforms.TransformType, TRSRTransformation> transforms)
         {
+            if(transforms == null) {
+                transforms = new EnumMap<>(ItemCameraTransforms.TransformType.class);
+                for(ItemCameraTransforms.TransformType transformType : ItemCameraTransforms.TransformType.values()) {
+                    transforms.put(transformType, castDefTRSRTransformation(transformType));
+                }
+            } else {
+                for(ItemCameraTransforms.TransformType transformType : ItemCameraTransforms.TransformType.values()) {
+                    transforms.computeIfAbsent(transformType, this::castDefTRSRTransformation);
+                }
+            }
+
+            this.transforms = transforms;
             this.parent = parent;
         }
 
         @Override
         public Optional<TRSRTransformation> apply(Optional<? extends IModelPart> part) {
-            if(parent != null) parent.apply(part);
+
+            if(parent != null)
+            {
+                Optional<TRSRTransformation> t = parent.apply(part);
+                if(t.isPresent()) return t;
+            }
+
+            if(part.isPresent() && part.get() instanceof ItemCameraTransforms.TransformType) {
+                return Optional.of(transforms.get((ItemCameraTransforms.TransformType) part.get()));
+            }
             return Optional.empty();
         }
 
+        private TRSRTransformation castDefTRSRTransformation(ItemCameraTransforms.TransformType transformType)
+        {
+            switch (transformType)
+            {
+                case FIRST_PERSON_RIGHT_HAND:
+                    return FIRST_PERSON_RIGHT;
+                case THIRD_PERSON_RIGHT_HAND:
+                    return THIRD_PERSON_RIGHT;
+                case FIRST_PERSON_LEFT_HAND:
+                    return FIRST_PERSON_LEFT;
+                case THIRD_PERSON_LEFT_HAND:
+                    return THIRD_PERSON_LEFT;
+                case GUI:
+                    return GUI_TRANSFORMATION;
+                case GROUND:
+                    return GROUND_TRANSFORMATION;
+                default:
+                    return TRSRTransformation.identity();
+            }
+        }
     }
 
     public static class CustomData {
         public boolean isAmbient;
         public boolean isGui3d;
-        public boolean flipV;
+        public boolean flipV = true;
 
         public CustomData() {
-
         }
 
         public CustomData(CustomData parent, Map<String, String> data) {
@@ -504,8 +565,8 @@ public class CustomModel implements IModel {
                     case "vt":
                         float[] vt = parseFloats(splitData);
                         textureCoordinates.add(new TextureCoordinate(vt[0],
-                                vt.length >= 2 ? vt[1] : 1.0f,
-                                vt.length >= 3 ? vt[2] : 1.0f));
+                                vt.length >= 2 ? vt[1] : 0.0f,
+                                vt.length >= 3 ? vt[2] : 0.0f));
                         break;
                     case "f":
                         Vertex[] va = new Vertex[splitData.length];
@@ -571,6 +632,7 @@ public class CustomModel implements IModel {
                     default: //unknown command
                         CompoundWeapon.LOGGER.warn("CompoundWeapon.OBJParser: command '{}' (model: '{}') is not currently supported, skipping. Line: {} '{}'",
                                 lineData[0], resourceLocation, lineNum, line);
+                        break;
                 }
             }
             return new CustomModel(mtlManager, resourceLocation, ModelType.OBJ);
