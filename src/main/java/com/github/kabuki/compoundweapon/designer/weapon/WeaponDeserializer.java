@@ -192,6 +192,10 @@ public enum WeaponDeserializer {
 
         }
 
+        if(obj.has("model")) {
+            builder.model(obj.get("model").getAsString());
+        }
+
         if(obj.has("override")) {
             if (!(obj.get("override") instanceof JsonObject)) {
                 CompoundWeapon.LOGGER.warn("Syntax Error on Override material property");

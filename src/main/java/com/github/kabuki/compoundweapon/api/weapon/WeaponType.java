@@ -2,8 +2,13 @@ package com.github.kabuki.compoundweapon.api.weapon;
 
 import com.github.kabuki.compoundweapon.CompoundWeapon;
 import com.github.kabuki.compoundweapon.api.skill.ISkill;
+import com.github.kabuki.compoundweapon.client.model.ModelType;
+import com.github.kabuki.compoundweapon.client.model.VariantMapper;
 import com.github.kabuki.compoundweapon.weapon.combat.melee.Sword;
 import com.google.common.collect.Lists;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.util.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +20,8 @@ public enum WeaponType {
         @Override
         public IWeapon build() {
             Sword sword = new Sword(material);
+            sword.setResources(model);
+
             if(hasOverrideFlag(DAMAGE))
             {
                 sword.setOverrideDamage(damage);
@@ -56,6 +63,7 @@ public enum WeaponType {
         protected float speed;
         protected float damage;
         protected int durability;
+        protected VariantMapper model;
 
         protected static final byte DAMAGE = 0x01;
         protected static final byte DURABILITY = 0x02;
@@ -103,6 +111,20 @@ public enum WeaponType {
 
         public AbstractWeaponBuilder<T> name(String name) {
             this.name = checkNotNull(name, "name");
+            return this;
+        }
+
+        public AbstractWeaponBuilder<T> model(String model) {
+            if(StringUtils.isNullOrEmpty(model)) throw new IllegalArgumentException("parameter is null or empty");
+
+            if(model.endsWith(":")) {
+                ModelResourceLocation modelResourceLocation = new ModelResourceLocation(model);
+                this.model = new VariantMapper(0, Pair.of(modelResourceLocation.getVariant(), modelResourceLocation));
+            }
+            else {
+                this.model = new VariantMapper(0, "inventory",
+                        model, model.endsWith(".obj") ? ModelType.OBJ : ModelType.JSON);
+            }
             return this;
         }
 
