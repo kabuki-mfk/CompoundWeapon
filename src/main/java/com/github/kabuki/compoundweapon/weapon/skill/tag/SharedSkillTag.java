@@ -16,4 +16,24 @@ public class SharedSkillTag {
         Number num = tag != null ? tag.getValue(Number.class) : 0;
         return fun.apply(num);
     }
+
+    public static Number getTagNumber(String tagName, ISkillContext context) {
+        return getTagValue(tagName, context, Number.class);
+    }
+
+    public static <T> T getTagValue(String tagName, ISkillContext context, Class<T> tagType) {
+        return context.getTagValue(tagName).getValue(tagType);
+    }
+
+    public static void changeTagNumber(String tagName, ISkillContext context, Function<Number, Number> fun) {
+        setTagValue(tagName, context, fun.apply(getTagValue(tagName, context, Number.class)));
+    }
+
+    public static void setTagValue(String tagName, ISkillContext context, Object tagValue) {
+        context.setTagValue(tagName, tagValue);
+    }
+
+    public static boolean hasTagValue(String tagName, ISkillContext context) {
+        return context.getTagValue(tagName).getValue(Object.class) != null;
+    }
 }
