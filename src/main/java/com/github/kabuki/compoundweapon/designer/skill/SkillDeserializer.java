@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 public enum SkillDeserializer {
     INSTANCE;
@@ -24,7 +23,7 @@ public enum SkillDeserializer {
 
     public void load(File f) throws IOException
     {
-        File skillDir = new File(f, "mods/CompoundWeapon/Custom/Skill");
+        File skillDir = new File(f, "mods" + File.separator + "CompoundWeapon" + File.separator + "Custom" + File.separator + "Skill");
         File taskDir = new File(skillDir, "Task");
 
         if(!skillDir.exists())
@@ -37,14 +36,13 @@ public enum SkillDeserializer {
         {
             taskDir.mkdir();
         }
+
         else if(taskDir.isDirectory())
         {
             GsonBuilder builder = new GsonBuilder();
-            for(Map.Entry<String, SkillTask> e : SkillTask.REGISTRY.getRegistry().entrySet())
-            {
-                SkillTask task = e.getValue();
+            SkillTask.onRegisterTaskType();
+            for(SkillTask task : SkillTask.getTypeList())
                 builder.registerTypeAdapter(task.getClass(), task.getDeserializer());
-            }
             gson = builder.create();
             loadSkillTask(taskDir);
         }
@@ -72,7 +70,7 @@ public enum SkillDeserializer {
                 try {
                     loadSkillTaskElement(f2);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    CompoundWeapon.LOGGER.error("Error on loading SkillTask, File:" + f.getPath(), e);
                 }
             }
         }
@@ -82,30 +80,24 @@ public enum SkillDeserializer {
     {
         JsonParser parser = new JsonParser();
 
-        try(FileReader reader = new FileReader(f))
-        {
-            Object object = parser.parse(reader);
+        FileReader reader = new FileReader(f);
+        Object object = parser.parse(reader);
 
-            if(object instanceof JsonObject)
+        if(object instanceof JsonObject)
+        {
+            JsonObject obj = (JsonObject) object;
+            String name = getFileTrueName(f);
+            String type = obj.get("type").getAsString();
+            SkillTask task = SkillTask.getTypeFromName(type);
+            if(StringUtils.isNullOrEmpty(type) || task.isMissing())
             {
-                JsonObject obj = (JsonObject) object;
-                String name = getFileTrueName(f);
-                String type = obj.get("type").getAsString();
-                SkillTask task = SkillTask.REGISTRY.getTypeTask(type);
-                if(StringUtils.isNullOrEmpty(type) || task.isMissing())
-                {
-                    CompoundWeapon.LOGGER.error("Not such type in File:{}", f.getPath());
-                    return;
-                }
-
-                SkillTask element = gson.fromJson(obj.get("parameter"), task.getClass());
-                element.setName(name);
-                SkillTask.REGISTRY.register(name, element);
+                CompoundWeapon.LOGGER.error("Not such type in File:{}", f.getPath());
+                return;
             }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
+
+            SkillTask element = gson.fromJson(obj.get("parameter"), task.getClass());
+            element.setName(name);
+            SkillTask.REGISTRY.register(name, element);
         }
     }
 

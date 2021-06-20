@@ -2,9 +2,13 @@ package com.github.kabuki.compoundweapon.weapon.skill.task;
 
 import com.github.kabuki.compoundweapon.api.skill.service.ISkillContext;
 import com.github.kabuki.compoundweapon.common.registries.SkillTaskRegistry;
+import com.google.common.collect.Lists;
 import com.google.gson.JsonDeserializer;
 
+import java.util.List;
+
 public abstract class SkillTask implements Cloneable{
+    private final static List<SkillTask> TASK_TYPE = Lists.newArrayList();
     public static SkillTaskRegistry REGISTRY = SkillTaskRegistry.getInstance();
     public static SkillTask MISSING = new SkillTask() {
         @Override
@@ -78,4 +82,33 @@ public abstract class SkillTask implements Cloneable{
 
     public abstract void run(ISkillContext context);
 
+    public static List<SkillTask> getTypeList() {
+        return TASK_TYPE;
+    }
+
+    public static SkillTask getTypeFromName(String typeName) {
+        for(SkillTask task : TASK_TYPE)
+            if(task.getName().contains(typeName))
+                return task;
+
+        return MISSING;
+    }
+
+    public static void registerTaskType(SkillTask skillTask) {
+        TASK_TYPE.add(skillTask);
+    }
+
+    public static void onRegisterTaskType() {
+        registerTaskType(new RandomTask());
+        registerTaskType(new TaskRange(null));
+        registerTaskType(new TaskRange.Round());
+        registerTaskType(new TaskRange.Square());
+        registerTaskType(new TaskAmplifier());
+        registerTaskType(new TaskDamage());
+        registerTaskType(new TaskPolygon());
+        registerTaskType(new TaskOffset(null));
+        registerTaskType(new TaskOffset.OffsetForward());
+        registerTaskType(new TaskOffset.OffsetStrafe());
+        registerTaskType(new TaskOffset.OffsetVertical());
+    }
 }

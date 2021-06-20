@@ -34,11 +34,11 @@ public class SkillTaskRegistry extends AbstractRegistry<SkillTask> {
     }
 
     public SkillTask getTypeTask(String taskName) {
-        return (SkillTask) getRegistry().get(taskName).clone();
+        return (SkillTask) getRegistry().getOrDefault(taskName, SkillTask.MISSING).clone();
     }
 
     public SkillTask getProtoTypeTask(String taskName) {
-        return getRegistry().get(taskName);
+        return getRegistry().getOrDefault(taskName, SkillTask.MISSING);
     }
 
 
