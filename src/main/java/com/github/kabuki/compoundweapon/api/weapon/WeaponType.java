@@ -117,7 +117,7 @@ public enum WeaponType {
         public AbstractWeaponBuilder<T> model(String model) {
             if(StringUtils.isNullOrEmpty(model)) throw new IllegalArgumentException("parameter is null or empty");
 
-            if(model.endsWith(":")) {
+            if(model.contains(":")) {
                 ModelResourceLocation modelResourceLocation = new ModelResourceLocation(model);
                 this.model = new VariantMapper(0, Pair.of(modelResourceLocation.getVariant(), modelResourceLocation));
             }
