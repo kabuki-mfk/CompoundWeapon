@@ -19,7 +19,7 @@ public class RealSkill implements ISkill {
 
     @Override
     public ISkillRelease getDevice() {
-        return null;
+        return skill.getDevice();
     }
 
     @Override

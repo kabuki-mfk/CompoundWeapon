@@ -3,10 +3,8 @@ package com.github.kabuki.compoundweapon.weapon.combat;
 import com.github.kabuki.compoundweapon.api.weapon.ICombatWeapon;
 import com.github.kabuki.compoundweapon.api.weapon.IWeaponMaterial;
 import com.github.kabuki.compoundweapon.api.weapon.WeaponType;
-import com.github.kabuki.compoundweapon.api.weapon.data.IWeaponAttributes;
 import com.github.kabuki.compoundweapon.common.capability.CapabilitySkillProvider;
 import com.github.kabuki.compoundweapon.weapon.Weapon;
-import com.github.kabuki.compoundweapon.weapon.attribute.Attribute;
 import com.github.kabuki.compoundweapon.weapon.skill.AbstractCoolDownSlot;
 import com.github.kabuki.compoundweapon.weapon.skill.SkillProvider;
 import net.minecraft.item.ItemStack;
@@ -19,7 +17,7 @@ public abstract class CombatWeapon extends Weapon implements ICombatWeapon {
 
     private float attackDamage;
     private float attackSpeed;
-    private AbstractCoolDownSlot skillslots = new AbstractCoolDownSlot.AsyncCoolDownSlot(getSkillSlotSize());
+    private AbstractCoolDownSlot skillSlots = new AbstractCoolDownSlot.AsyncCoolDownSlot(getSkillSlotSize());
 
     public CombatWeapon(WeaponType type, IWeaponMaterial material) {
         this(type, material, 5, 1);
@@ -34,7 +32,6 @@ public abstract class CombatWeapon extends Weapon implements ICombatWeapon {
     public void setOverrideDamage(float attackDamage) {
         setIsOverrideMaterial();
         this.attackDamage = attackDamage;
-
     }
 
     public void setOverrideSpeed(float attackSpeed) {
@@ -44,7 +41,7 @@ public abstract class CombatWeapon extends Weapon implements ICombatWeapon {
 
     @Override
     public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable NBTTagCompound nbt) {
-        return hasSkill() ? new CapabilitySkillProvider.Provider(new SkillProvider(skillslots)) :
+        return hasSkill() ? new CapabilitySkillProvider.Provider(new SkillProvider(skillSlots)) :
                 super.initCapabilities(stack, nbt);
     }
 
@@ -56,7 +53,7 @@ public abstract class CombatWeapon extends Weapon implements ICombatWeapon {
         return 4;
     }
 
-    public AbstractCoolDownSlot getSkillslots() {
-        return skillslots;
+    public AbstractCoolDownSlot getSkillSlots() {
+        return skillSlots;
     }
 }

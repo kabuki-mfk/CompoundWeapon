@@ -4,6 +4,8 @@ import com.github.kabuki.compoundweapon.CompoundWeapon;
 import com.github.kabuki.compoundweapon.api.skill.ISkill;
 import com.github.kabuki.compoundweapon.client.model.ModelType;
 import com.github.kabuki.compoundweapon.client.model.VariantMapper;
+import com.github.kabuki.compoundweapon.weapon.Weapon;
+import com.github.kabuki.compoundweapon.weapon.combat.CombatWeapon;
 import com.github.kabuki.compoundweapon.weapon.combat.melee.Sword;
 import com.google.common.collect.Lists;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -18,23 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public enum WeaponType {
     SWORD("sword", new AbstractWeaponBuilder<IWeapon>() {
         @Override
-        public IWeapon build() {
-            Sword sword = new Sword(material);
-            sword.setResources(model);
-
-            if(hasOverrideFlag(DAMAGE))
-            {
-                sword.setOverrideDamage(damage);
-            }
-            if(hasOverrideFlag(DURABILITY))
-            {
-                sword.setOverrideDurability(durability);
-            }
-            if(hasOverrideFlag(SPEED))
-            {
-                sword.setOverrideSpeed(speed);
-            }
-            return sword;
+        protected IWeapon preBuild() {
+            return new Sword(material);
         }
     });
 
@@ -54,8 +41,7 @@ public enum WeaponType {
         return (AbstractWeaponBuilder<? extends IWeapon>) factory.clone();
     }
 
-    public abstract static class AbstractWeaponBuilder<T extends IWeapon> implements Cloneable
-    {
+    public abstract static class AbstractWeaponBuilder<T extends IWeapon> implements Cloneable {
         protected IWeaponMaterial material;
         protected final List<ISkill> skills = Lists.newArrayList();
         protected String name;
@@ -63,7 +49,7 @@ public enum WeaponType {
         protected float speed;
         protected float damage;
         protected int durability;
-        protected VariantMapper model;
+        protected List<VariantMapper> model;
 
         protected static final byte DAMAGE = 0x01;
         protected static final byte DURABILITY = 0x02;
@@ -119,16 +105,45 @@ public enum WeaponType {
 
             if(model.contains(":")) {
                 ModelResourceLocation modelResourceLocation = new ModelResourceLocation(model);
-                this.model = new VariantMapper(0, Pair.of(modelResourceLocation.getVariant(), modelResourceLocation));
+                this.model.add(new VariantMapper(0, Pair.of(modelResourceLocation.getVariant(), modelResourceLocation)));
             }
             else {
-                this.model = new VariantMapper(0, "inventory",
-                        model, model.endsWith(".obj") ? ModelType.OBJ : ModelType.JSON);
+                this.model.add(new VariantMapper(0, "inventory",
+                        model, model.endsWith(".obj") ? ModelType.OBJ : ModelType.JSON));
             }
             return this;
         }
 
-        public abstract T build();
+        public T build() {
+            T weapon = preBuild();
+
+            if(weapon instanceof Weapon) {
+                Weapon w = ((Weapon) weapon);
+                w.setResources(model);
+                if(hasOverrideFlag(DURABILITY))
+                {
+                    w.setOverrideDurability(durability);
+                }
+            }
+
+            if(weapon instanceof CombatWeapon) {
+                CombatWeapon cw = ((CombatWeapon) weapon);
+                for(ISkill skill : skills)
+                    cw.getSkillSlots().addSkill(skill);
+                if(hasOverrideFlag(DAMAGE))
+                {
+                    cw.setOverrideDamage(damage);
+                }
+                if(hasOverrideFlag(SPEED))
+                {
+                    cw.setOverrideSpeed(speed);
+                }
+            }
+
+            return weapon;
+        }
+
+        protected abstract T preBuild();
 
         @Override
         protected Object clone() {

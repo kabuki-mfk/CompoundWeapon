@@ -41,7 +41,7 @@ public class Sword extends CombatWeapon {
                 {
                     entitylivingbase.knockBack(attacker, 0.4F, MathHelper.sin(attacker.rotationYaw * 0.017453292F),
                             -MathHelper.cos(attacker.rotationYaw * 0.017453292F));
-                    entitylivingbase.attackEntityFrom(DamageSource.causePlayerDamage((EntityPlayer) attacker), getSweepingDamageRatio(stack));
+                    entitylivingbase.attackEntityFrom(causeWeaponDamageSource(attacker), getSweepingDamageRatio(stack));
                 }
             }
         }

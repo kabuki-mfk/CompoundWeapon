@@ -1,6 +1,7 @@
 package com.github.kabuki.compoundweapon.logic;
 
 import com.github.kabuki.compoundweapon.CompoundWeapon;
+import com.github.kabuki.compoundweapon.api.weapon.WeaponDamageSource;
 import com.github.kabuki.compoundweapon.weapon.Weapon;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -14,6 +15,8 @@ public class WeaponHandler {
     @SubscribeEvent
     public static void onAttack(LivingAttackEvent event)
     {
+        if(event.getSource() instanceof WeaponDamageSource) return;
+
         Entity entity = event.getSource().getTrueSource();
         if(entity instanceof EntityLivingBase)
         {

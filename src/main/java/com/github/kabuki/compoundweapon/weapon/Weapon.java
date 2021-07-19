@@ -2,17 +2,22 @@ package com.github.kabuki.compoundweapon.weapon;
 
 import com.github.kabuki.compoundweapon.api.weapon.IWeapon;
 import com.github.kabuki.compoundweapon.api.weapon.IWeaponMaterial;
+import com.github.kabuki.compoundweapon.api.weapon.WeaponDamageSource;
 import com.github.kabuki.compoundweapon.api.weapon.WeaponType;
 import com.github.kabuki.compoundweapon.common.registries.WeaponRegistry;
 import com.github.kabuki.compoundweapon.weapon.attribute.WeaponAttributeHelper;
 import com.github.kabuki.compoundweapon.client.model.VariantMapper;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
@@ -65,6 +70,12 @@ public class Weapon extends Item implements IWeapon {
     }
 
     @Override
+    public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack) {
+        Multimap<String, AttributeModifier> multimap = super.getAttributeModifiers(slot, stack);
+        return material.getAttributeModifiers(multimap, slot, stack);
+    }
+
+    @Override
     public void onUpdate(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected) {
         WeaponAttributeHelper.handleDynamicAttribute(material.getAttributeInstance(),
                 attr -> attr.onUpdate(stack, worldIn, entityIn, itemSlot, isSelected));
@@ -85,11 +96,19 @@ public class Weapon extends Item implements IWeapon {
         return super.onItemRightClick(worldIn, playerIn, handIn);
     }
 
+    protected DamageSource causeWeaponDamageSource(Entity source) {
+        return new WeaponDamageSource(source, this);
+    }
+
     public void onAttack(ItemStack stack, EntityLivingBase target, EntityLivingBase attacker) {
     }
 
     public Weapon setResources(VariantMapper... resources) {
-        this.resources = Lists.newArrayList(resources);
+        return setResources(Lists.newArrayList(resources));
+    }
+
+    public Weapon setResources(List<VariantMapper> resources) {
+        this.resources = resources;
         return this;
     }
 
