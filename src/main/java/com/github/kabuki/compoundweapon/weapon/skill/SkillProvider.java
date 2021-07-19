@@ -113,7 +113,10 @@ public class SkillProvider implements ISkillProvider {
         {
             Map<String, IAttribute> attributes = ((IWeapon)stack.getItem()).getMaterial().getAttributeInstance().toMap();
             for(Map.Entry<String, IAttribute> e : attributes.entrySet()) {
-                context.setTagValue(e.getKey(), e.getValue());
+                if(e.getValue() instanceof IAttribute.IDataAttribute)
+                    context.setTagValue(e.getKey(), ((IAttribute.IDataAttribute) e.getValue()).getValue().toObject().get(Object.class));
+                else
+                    context.setTagValue(e.getKey(), e.getValue());
             }
         }
         if(entityIn != null)

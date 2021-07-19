@@ -47,7 +47,7 @@ public class TaskDamage extends SkillTask{
 
     protected void onDamage(Entity source, EntityLivingBase entityLivingBase, float damage)
     {
-        if(canKnockBack()) entityLivingBase.knockBack(source, 0, (double)MathHelper.sin(source.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(source.rotationYaw * 0.017453292F)));
+        if(canKnockBack()) entityLivingBase.knockBack(source, 0, MathHelper.sin(source.rotationYaw * 0.017453292F), -MathHelper.cos(source.rotationYaw * 0.017453292F));
         entityLivingBase.attackEntityFrom(SkillAPI.causeSkillDamageSource(source), damage);
     }
 

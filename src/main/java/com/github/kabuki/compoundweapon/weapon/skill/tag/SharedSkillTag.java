@@ -3,6 +3,7 @@ package com.github.kabuki.compoundweapon.weapon.skill.tag;
 import com.github.kabuki.compoundweapon.api.skill.service.ISkillContext;
 import com.github.kabuki.compoundweapon.api.skill.service.ISkillTag;
 
+import javax.annotation.Nullable;
 import java.util.function.Function;
 
 public class SharedSkillTag {
@@ -14,13 +15,15 @@ public class SharedSkillTag {
     public static <T extends Number> T arithmetic(String tagName, ISkillContext context, Function<Number, T> fun) {
         ISkillTag tag = context.getTagValue(tagName);
         Number num = tag != null ? tag.getValue(Number.class) : 0;
-        return fun.apply(num);
+        return fun.apply(num == null ? 0 : num);
     }
 
+    @Nullable
     public static Number getTagNumber(String tagName, ISkillContext context) {
         return getTagValue(tagName, context, Number.class);
     }
 
+    @Nullable
     public static <T> T getTagValue(String tagName, ISkillContext context, Class<T> tagType) {
         return context.getTagValue(tagName).getValue(tagType);
     }
