@@ -49,7 +49,7 @@ public enum WeaponType {
         protected float speed;
         protected float damage;
         protected int durability;
-        protected List<VariantMapper> model;
+        protected List<VariantMapper> model = Lists.newArrayList();
 
         protected static final byte DAMAGE = 0x01;
         protected static final byte DURABILITY = 0x02;

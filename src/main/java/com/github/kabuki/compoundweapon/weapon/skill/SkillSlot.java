@@ -60,7 +60,7 @@ public class SkillSlot implements ISkillSlot {
             return false;
         }
 
-        slots[storeIn++] = createStoreSlot(storeIn, new RealSkill(skill));
+        slots[storeIn] = createStoreSlot(storeIn++, new RealSkill(skill));
         return true;
     }
 
